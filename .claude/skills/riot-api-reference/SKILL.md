@@ -13,34 +13,38 @@ Comprehensive reference for integrating with the Riot Games API for League of Le
 ## API Endpoints Overview
 
 ### Account-V1 (Riot ID Lookup)
+
 **Base URL:** `https://{region}.api.riotgames.com/riot/account/v1/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/accounts/by-riot-id/{gameName}/{tagLine}` | Get PUUID by Riot ID |
 | `/accounts/by-puuid/{puuid}` | Get account info (gameName + tagLine) by PUUID |
 
 **Important:** Riot IDs replaced summoner names as of November 20, 2023. The `by-name` endpoints are deprecated.
 
 ### Summoner-V4
+
 **Base URL:** `https://{platform}.api.riotgames.com/lol/summoner/v4/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/summoners/by-puuid/{puuid}` | Get summoner by PUUID (recommended) |
 | `/summoners/{summonerId}` | Get summoner by encrypted summoner ID |
 | `/summoners/by-account/{accountId}` | Get summoner by encrypted account ID |
 
 ### Match-V5
+
 **Base URL:** `https://{region}.api.riotgames.com/lol/match/v5/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/matches/by-puuid/{puuid}/ids` | Get list of match IDs for a player |
 | `/matches/{matchId}` | Get match details by match ID |
 | `/matches/{matchId}/timeline` | Get match timeline (not all matches have this) |
 
 **Query Parameters for matchlist:**
+
 - `start` - Start index (default 0)
 - `count` - Number of matches (default 20, max 100)
 - `queue` - Filter by queue ID
@@ -48,10 +52,11 @@ Comprehensive reference for integrating with the Riot Games API for League of Le
 - `startTime` / `endTime` - Filter by timestamp (epoch seconds)
 
 ### League-V4
+
 **Base URL:** `https://{platform}.api.riotgames.com/lol/league/v4/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/entries/by-summoner/{summonerId}` | Get ranked entries for a summoner |
 | `/entries/{queue}/{tier}/{division}` | Get all entries for a tier/division |
 | `/challengerleagues/by-queue/{queue}` | Get challenger league |
@@ -61,29 +66,32 @@ Comprehensive reference for integrating with the Riot Games API for League of Le
 **Note:** If a player hasn't finished placements or isn't ranked in a queue, that queue won't appear in results.
 
 ### Champion-Mastery-V4
+
 **Base URL:** `https://{platform}.api.riotgames.com/lol/champion-mastery/v4/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/champion-masteries/by-puuid/{puuid}` | Get all champion masteries |
 | `/champion-masteries/by-puuid/{puuid}/top` | Get top champion masteries |
 | `/scores/by-puuid/{puuid}` | Get total mastery score |
 
 ### Spectator-V5
+
 **Base URL:** `https://{platform}.api.riotgames.com/lol/spectator/v5/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/active-games/by-summoner/{puuid}` | Get current game info (404 if not in game) |
 | `/featured-games` | Get list of featured games |
 
 **Limitations:** Stats like role, KDA, or CS are not included. Custom game data is not available due to privacy policies.
 
 ### Challenges-V1
+
 **Base URL:** `https://{platform}.api.riotgames.com/lol/challenges/v1/`
 
 | Endpoint | Description |
-|----------|-------------|
+| ---------- | ------------- |
 | `/player-data/{puuid}` | Get player challenge progress |
 | `/challenges/config` | Get all challenge configurations |
 | `/challenges/{challengeId}/leaderboards/by-level/{level}` | Get challenge leaderboard (MASTER/GRANDMASTER/CHALLENGER) |
@@ -93,10 +101,11 @@ Comprehensive reference for integrating with the Riot Games API for League of Le
 ## Regional vs Platform Routing
 
 ### Platform Routing Values
+
 Used for most endpoints (Summoner-V4, League-V4, Champion-Mastery-V4, Spectator-V5):
 
 | Platform | Region |
-|----------|--------|
+| ---------- | -------- |
 | `na1` | North America |
 | `euw1` | Europe West |
 | `eun1` | Europe Nordic & East |
@@ -115,17 +124,19 @@ Used for most endpoints (Summoner-V4, League-V4, Champion-Mastery-V4, Spectator-
 | `vn2` | Vietnam |
 
 ### Regional Routing Values
+
 Used for Account-V1 and Match-V5:
 
 | Region | Platforms Covered |
-|--------|-------------------|
+| -------- | ------------------- |
 | `americas` | NA1, BR1, LA1, LA2 |
 | `europe` | EUW1, EUN1, TR1, RU |
 | `asia` | KR, JP1 |
 | `sea` | PH2, SG2, TH2, TW2, VN2 |
 
 **Example URLs:**
-```
+
+```text
 Platform: https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}
 Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids
 ```
@@ -149,7 +160,7 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 ### Rate Limit Headers
 
 | Header | Description |
-|--------|-------------|
+| -------- | ------------- |
 | `X-App-Rate-Limit` | Your app's rate limit |
 | `X-App-Rate-Limit-Count` | Current count against app limit |
 | `X-Method-Rate-Limit` | Endpoint's rate limit |
@@ -159,7 +170,7 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 ### Error Handling
 
 | Code | Meaning | Action |
-|------|---------|--------|
+| ------ | --------- | -------- |
 | `429` | Rate limit exceeded | Wait for `Retry-After` seconds |
 | `403` | Forbidden (invalid/blacklisted key) | Check API key validity |
 | `404` | Not found | Resource doesn't exist (e.g., player not in game) |
@@ -173,7 +184,7 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 ### Identifier Types
 
 | ID Type | Scope | Use Case |
-|---------|-------|----------|
+| --------- | ------- | ---------- |
 | **PUUID** | Global, permanent | Preferred for all lookups |
 | **Summoner ID** | Per-region | Legacy, still used in some endpoints |
 | **Account ID** | Per-region | Legacy |
@@ -182,12 +193,14 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 ### Recommended Workflow
 
 1. Get PUUID from Riot ID:
-   ```
+
+   ```text
    GET /riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}
    ```
 
 2. Use PUUID for all subsequent calls:
-   ```
+
+   ```text
    GET /lol/match/v5/matches/by-puuid/{puuid}/ids
    GET /lol/summoner/v4/summoners/by-puuid/{puuid}
    ```
@@ -199,6 +212,7 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 ## Data Dragon (Static Data)
 
 ### Base URLs
+
 - **Versions:** `https://ddragon.leagueoflegends.com/api/versions.json`
 - **Data:** `https://ddragon.leagueoflegends.com/cdn/{version}/data/{locale}/`
 - **Images:** `https://ddragon.leagueoflegends.com/cdn/{version}/img/`
@@ -206,7 +220,7 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 ### Common Data Files
 
 | File | Content |
-|------|---------|
+| ------ | --------- |
 | `champion.json` | All champions (basic info) |
 | `champion/{name}.json` | Single champion (detailed) |
 | `item.json` | All items |
@@ -215,7 +229,8 @@ Regional: https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puui
 | `profileicon.json` | Profile icons |
 
 ### Example URLs
-```
+
+```text
 Champions: https://ddragon.leagueoflegends.com/cdn/14.24.1/data/en_US/champion.json
 Items: https://ddragon.leagueoflegends.com/cdn/14.24.1/data/en_US/item.json
 Champion image: https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/Ahri.png
@@ -223,8 +238,10 @@ Item image: https://ddragon.leagueoflegends.com/cdn/14.24.1/img/item/1001.png
 ```
 
 ### Community Dragon
+
 Data Dragon can be inaccurate (especially champion spell data). Use Community Dragon (`cdragon`) for more accurate data:
-- https://raw.communitydragon.org/
+
+- <https://raw.communitydragon.org/>
 
 ---
 
@@ -233,11 +250,13 @@ Data Dragon can be inaccurate (especially champion spell data). Use Community Dr
 This project uses the `twisted` npm package for Riot API calls.
 
 ### Installation
+
 ```bash
 npm install twisted
 ```
 
 ### Basic Setup
+
 ```typescript
 import { LolApi, RiotApi, TftApi } from 'twisted';
 
@@ -282,6 +301,7 @@ const leagues = await lolApi.League.bySummoner(
 ```
 
 ### Configuration Options
+
 ```typescript
 const api = new LolApi({
   key: 'RGAPI-xxx',

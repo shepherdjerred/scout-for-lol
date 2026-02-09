@@ -8,7 +8,7 @@
 
 Monorepo using **Bun workspaces**:
 
-```
+```text
 packages/
 ├── backend/   # Discord bot backend service
 ├── data/      # Shared data models and utilities
@@ -173,7 +173,7 @@ Commands live in `packages/backend/src/discord/commands/`. Each command exports:
 - `SlashCommandBuilder` - Command definition
 - `execute` function - Command handler
 
-### Error Handling
+### Discord Error Handling
 
 ```typescript
 // Always handle Discord API errors gracefully

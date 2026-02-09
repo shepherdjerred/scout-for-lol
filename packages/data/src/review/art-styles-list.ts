@@ -38,16 +38,19 @@ export const ART_STYLES: ArtStyle[] = [
     description: "Minecraft blocky voxel aesthetic with pixelated textures and cubic world-building",
   },
   {
-    description: "Old School RuneScape style with low-poly 3D models, click-to-move interface, and nostalgic early-2000s MMO charm",
+    description:
+      "Old School RuneScape style with low-poly 3D models, click-to-move interface, and nostalgic early-2000s MMO charm",
   },
   {
     description: "Valorant tactical shooter style with clean cel-shaded characters and stylized angular environments",
   },
   {
-    description: "League of Legends splash art style with dynamic poses, painterly rendering, and fantasy character design",
+    description:
+      "League of Legends splash art style with dynamic poses, painterly rendering, and fantasy character design",
   },
   {
-    description: "Season 1 League of Legends (2011) style with janky proportions, painted-over-3D splashes, and nostalgic early MOBA charm",
+    description:
+      "Season 1 League of Legends (2011) style with janky proportions, painted-over-3D splashes, and nostalgic early MOBA charm",
   },
   {
     description: "DOTA 2 style with detailed hero designs, dark fantasy atmosphere, and Valve's signature polish",

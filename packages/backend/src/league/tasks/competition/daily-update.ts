@@ -1,8 +1,4 @@
-import {
-  getCompetitionStatus,
-  type CachedLeaderboard,
-  type CompetitionWithCriteria,
-} from "@scout-for-lol/data/index";
+import { getCompetitionStatus, type CachedLeaderboard, type CompetitionWithCriteria } from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.ts";
 import {

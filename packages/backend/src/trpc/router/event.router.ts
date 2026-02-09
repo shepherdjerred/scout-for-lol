@@ -300,7 +300,7 @@ export const eventRouter = router({
         clientId: z.uuid(),
         inGame: z.boolean(),
         gameId: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await prisma.desktopClient.upsert({
@@ -332,7 +332,7 @@ export const eventRouter = router({
         voiceChannelId: z.string().optional(),
         guildId: z.string().optional(),
         soundPackId: z.number().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Verify sound pack access if provided

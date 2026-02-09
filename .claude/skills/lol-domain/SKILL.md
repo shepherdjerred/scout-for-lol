@@ -17,7 +17,7 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Tiers (Low to High)
 
 | Tier | Divisions | Notes |
-|------|-----------|-------|
+| ------ | ----------- | ------- |
 | Iron | IV, III, II, I | Lowest tier |
 | Bronze | IV, III, II, I | |
 | Silver | IV, III, II, I | Most populated |
@@ -42,12 +42,14 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Queue Restrictions
 
 **Solo/Duo:**
+
 - Most players: queue within 1 tier
 - Iron: can queue up to 2 tiers higher
 - Diamond+: within 2 divisions only
 - Grandmaster+: solo only
 
 **Flex:**
+
 - Diamond and below: no restrictions
 - Master+: must be Emerald+ to queue together
 
@@ -58,14 +60,14 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Ranked Queues
 
 | Queue | ID | Players | Notes |
-|-------|-----|---------|-------|
+| ------- | ----- | --------- | ------- |
 | Solo/Duo | 420 | 1-2 | Main competitive queue |
 | Flex 5v5 | 440 | 1, 2, 3, or 5 | No parties of 4 |
 
 ### Casual Queues
 
 | Queue | ID | Notes |
-|-------|-----|-------|
+| ------- | ----- | ------- |
 | Normal (Draft) | 400 | Same rules as ranked |
 | Normal (Blind) | 430 | Mirror matchups allowed |
 | ARAM | 450 | All Random, All Mid |
@@ -73,7 +75,7 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Special Queues
 
 | Queue | Notes |
-|-------|-------|
+| ------- | ------- |
 | Clash | Tournament mode |
 | Arena | 2v2v2v2 mode |
 | URF | Ultra Rapid Fire (rotating) |
@@ -86,7 +88,7 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Primary Classes
 
 | Class | Role | Examples |
-|-------|------|----------|
+| ------- | ------ | ---------- |
 | **Tank** | Absorb damage, initiate | Malphite, Ornn, Leona |
 | **Fighter** | Sustained damage + durability | Darius, Fiora, Jax |
 | **Assassin** | Burst damage, high mobility | Zed, Akali, Katarina |
@@ -97,14 +99,14 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Fighter Subclasses
 
 | Subclass | Traits | Examples |
-|----------|--------|----------|
+| ---------- | -------- | ---------- |
 | **Juggernaut** | Low mobility, high damage/durability | Darius, Mordekaiser, Garen |
 | **Diver** | Engage into backline | Irelia, Vi, Camille |
 
 ### Mage Subclasses
 
 | Subclass | Traits | Examples |
-|----------|--------|----------|
+| ---------- | -------- | ---------- |
 | **Burst Mage** | High combo damage | Syndra, Annie, Veigar |
 | **Battlemage** | Sustained AoE in fights | Cassiopeia, Ryze, Swain |
 | **Artillery Mage** | Extreme range | Xerath, Lux, Vel'Koz |
@@ -112,7 +114,7 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 ### Assassin Subclasses
 
 | Subclass | Traits | Examples |
-|----------|--------|----------|
+| ---------- | -------- | ---------- |
 | **Assassin** | Quick in-and-out | Zed, Talon, Akali |
 | **Skirmisher** | Extended duels | Yasuo, Yone, Fiora |
 
@@ -125,7 +127,7 @@ Comprehensive reference for League of Legends game concepts, terminology, and da
 Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants **Dragon Soul**.
 
 | Drake | Buff | Soul Effect |
-|-------|------|-------------|
+| ------- | ------ | ------------- |
 | **Infernal** | +AD/AP | Attacks cause AoE explosion |
 | **Mountain** | +Armor/MR | Shield after not taking damage |
 | **Ocean** | +HP regen | Damaging enemies heals you |
@@ -169,7 +171,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Core Stats
 
 | Stat | Description |
-|------|-------------|
+| ------ | ------------- |
 | **KDA** | Kills/Deaths/Assists ratio: (K+A)/D |
 | **CS** | Creep Score (minions + jungle monsters killed) |
 | **Gold** | Total gold earned |
@@ -180,7 +182,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Gold Values
 
 | Event | Gold |
-|-------|------|
+| ------- | ------ |
 | Melee minion | ~21 |
 | Caster minion | ~14 |
 | Cannon minion | ~60-90 |
@@ -195,7 +197,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Bounty System
 
 | Kill Streak | Bounty |
-|-------------|--------|
+| ------------- | -------- |
 | 0 (base) | 300 |
 | 2 kills | 450 |
 | 3 kills | 600 |
@@ -211,7 +213,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Rune Paths
 
 | Path | Theme | Classes |
-|------|-------|---------|
+| ------ | ------- | --------- |
 | **Precision** | Sustained damage, attacks | Marksmen, fighters |
 | **Domination** | Burst damage, hunting | Assassins, mages |
 | **Sorcery** | Abilities, utility | Mages, enchanters |
@@ -221,7 +223,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Precision Keystones
 
 | Keystone | Effect |
-|----------|--------|
+| ---------- | -------- |
 | **Press the Attack** | 3 hits = bonus damage + damage amp |
 | **Lethal Tempo** | Stacking attack speed |
 | **Fleet Footwork** | Energized heal + movement speed |
@@ -230,7 +232,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Domination Keystones
 
 | Keystone | Effect |
-|----------|--------|
+| ---------- | -------- |
 | **Electrocute** | 3 hits/abilities = burst damage |
 | **Dark Harvest** | Execute-style scaling damage |
 | **Hail of Blades** | Burst attack speed (3 attacks) |
@@ -239,7 +241,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Sorcery Keystones
 
 | Keystone | Effect |
-|----------|--------|
+| ---------- | -------- |
 | **Summon Aery** | Damage enemies or shield allies |
 | **Arcane Comet** | Ability hits launch comet |
 | **Phase Rush** | 3 hits = burst of movement speed |
@@ -247,7 +249,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Resolve Keystones
 
 | Keystone | Effect |
-|----------|--------|
+| ---------- | -------- |
 | **Grasp of the Undying** | Periodic empowered attack + heal |
 | **Aftershock** | CC triggers resistances + damage |
 | **Guardian** | Shield nearby ally when damaged |
@@ -255,7 +257,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Inspiration Keystones
 
 | Keystone | Effect |
-|----------|--------|
+| ---------- | -------- |
 | **Glacial Augment** | Slowing zone on immobilize |
 | **Unsealed Spellbook** | Swap summoner spells |
 | **First Strike** | Bonus gold/damage when striking first |
@@ -265,7 +267,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ## Summoner Spells
 
 | Spell | Cooldown | Effect |
-|-------|----------|--------|
+| ------- | ---------- | -------- |
 | **Flash** | 300s | Blink short distance |
 | **Ignite** | 180s | True damage DoT + Grievous Wounds |
 | **Teleport** | 360s | Channel to allied structure/minion |
@@ -279,7 +281,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Common Combinations
 
 | Role | Common Spells |
-|------|---------------|
+| ------ | --------------- |
 | Top | Flash + Teleport, Flash + Ignite |
 | Jungle | Flash + Smite (required) |
 | Mid | Flash + Ignite, Flash + Teleport |
@@ -293,7 +295,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Gameplay Terms
 
 | Term | Meaning |
-|------|---------|
+| ------ | --------- |
 | **AA** | Auto-attack (basic attack) |
 | **AoE** | Area of Effect |
 | **CC** | Crowd Control (stun, slow, etc.) |
@@ -306,7 +308,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Strategic Terms
 
 | Term | Meaning |
-|------|---------|
+| ------ | --------- |
 | **Aggro** | Aggressive play/drawing enemy attention |
 | **All-in** | Commit all abilities for a kill |
 | **Backdoor** | Destroy nexus by bypassing enemy team |
@@ -322,7 +324,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Player State Terms
 
 | Term | Meaning |
-|------|---------|
+| ------ | --------- |
 | **Fed** | Has many kills, strong |
 | **Behind** | Less gold/XP than opponent |
 | **Tilted** | Frustrated, playing worse |
@@ -331,7 +333,7 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ### Meta Terms
 
 | Term | Meaning |
-|------|---------|
+| ------ | --------- |
 | **Meta** | Most effective tactics available |
 | **Powerspike** | Point where champion becomes strong |
 | **Scaling** | Champion strength growth over time |
@@ -342,18 +344,21 @@ Spawn at 5:00, respawn 5 minutes after killed. One team getting 4 drakes grants 
 ## Match Phases
 
 ### Early Game (0-15 min)
+
 - Laning phase
 - First tower priority
 - Drake and Herald contests
 - Jungle path optimization
 
 ### Mid Game (15-30 min)
+
 - Towers falling
 - Roaming and skirmishing
 - Dragon Soul race
 - Baron attempts
 
 ### Late Game (30+ min)
+
 - Full builds approaching
 - Baron/Elder Dragon crucial
 - One fight can end game

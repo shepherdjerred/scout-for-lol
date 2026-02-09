@@ -202,9 +202,7 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
 
   if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
     const durationMinutes = (completedMatch.durationInSeconds / 60).toFixed(1);
-    logger.info(
-      `[generateMatchReport] Skipping AI review - game too short (${durationMinutes} min < 15 min)`,
-    );
+    logger.info(`[generateMatchReport] Skipping AI review - game too short (${durationMinutes} min < 15 min)`);
     return { text: undefined, image: undefined };
   }
 

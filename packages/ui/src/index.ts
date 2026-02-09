@@ -11,10 +11,7 @@
 export type { SoundPackAdapter, Champion, LocalPlayer, CacheStatus } from "./types/adapter.ts";
 
 // Hooks
-export {
-  SoundPackEditorProvider,
-  useSoundPackEditor,
-} from "./hooks/use-sound-pack-editor.tsx";
+export { SoundPackEditorProvider, useSoundPackEditor } from "./hooks/use-sound-pack-editor.tsx";
 
 // Components
 export {

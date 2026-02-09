@@ -57,7 +57,7 @@ This generates:
 
 Upload these files to your update server:
 
-```
+```text
 https://releases.myserver.com/
 ├── windows-x86_64/
 │   ├── 0.1.0/

@@ -156,9 +156,7 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
 /**
  * Get templates by category
  */
-export function getTemplatesByCategory(
-  category: RuleTemplate["category"],
-): RuleTemplate[] {
+export function getTemplatesByCategory(category: RuleTemplate["category"]): RuleTemplate[] {
   return RULE_TEMPLATES.filter((t) => t.category === category);
 }
 

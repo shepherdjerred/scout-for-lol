@@ -115,15 +115,15 @@ export function SoundPackEditor() {
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Sound Pack Editor</h2>
           {editor.isDirty && (
-            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
-              Unsaved changes
-            </span>
+            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Unsaved changes</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => { void editor.importPack(); }}
+            onClick={() => {
+              void editor.importPack();
+            }}
             disabled={editor.isLoading}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
           >
@@ -131,7 +131,9 @@ export function SoundPackEditor() {
           </button>
           <button
             type="button"
-            onClick={() => { void editor.exportPack(); }}
+            onClick={() => {
+              void editor.exportPack();
+            }}
             disabled={editor.isLoading}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
           >
@@ -140,7 +142,9 @@ export function SoundPackEditor() {
           {youtubeUrlCount > 0 && (
             <button
               type="button"
-              onClick={() => { void handleCacheAll(); }}
+              onClick={() => {
+                void handleCacheAll();
+              }}
               disabled={cacheAllState.isRunning}
               className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 flex items-center gap-1.5"
               title={`Cache all ${String(youtubeUrlCount)} YouTube audio files`}
@@ -151,15 +155,15 @@ export function SoundPackEditor() {
                   {cacheAllState.completed + cacheAllState.failed}/{cacheAllState.total}
                 </>
               ) : (
-                <>
-                  📥 Cache All ({youtubeUrlCount})
-                </>
+                <>📥 Cache All ({youtubeUrlCount})</>
               )}
             </button>
           )}
           <button
             type="button"
-            onClick={() => { void editor.savePack(); }}
+            onClick={() => {
+              void editor.savePack();
+            }}
             disabled={editor.isLoading || !editor.isDirty}
             className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
           >
@@ -172,11 +176,7 @@ export function SoundPackEditor() {
       {editor.error && (
         <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-700 text-sm flex items-center justify-between">
           <span>{editor.error}</span>
-          <button
-            type="button"
-            onClick={editor.clearError}
-            className="text-red-500 hover:text-red-700"
-          >
+          <button type="button" onClick={editor.clearError} className="text-red-500 hover:text-red-700">
             ×
           </button>
         </div>
@@ -191,7 +191,9 @@ export function SoundPackEditor() {
           id="pack-name"
           type="text"
           value={editor.soundPack.name}
-          onChange={(e) => { editor.updatePack({ name: e.currentTarget.value }); }}
+          onChange={(e) => {
+            editor.updatePack({ name: e.currentTarget.value });
+          }}
           className="w-full px-3 py-2 border rounded"
           placeholder="My Sound Pack"
         />
@@ -203,7 +205,9 @@ export function SoundPackEditor() {
           <button
             key={tab}
             type="button"
-            onClick={() => { setActiveTab(tab); }}
+            onClick={() => {
+              setActiveTab(tab);
+            }}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
               activeTab === tab
                 ? "border-blue-600 text-blue-600"
@@ -251,7 +255,9 @@ function DefaultsTab() {
             {/* Header */}
             <button
               type="button"
-              onClick={() => { setExpandedEvent(isExpanded ? null : eventType); }}
+              onClick={() => {
+                setExpandedEvent(isExpanded ? null : eventType);
+              }}
               className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50"
             >
               <div className="flex items-center gap-3">
@@ -271,16 +277,26 @@ function DefaultsTab() {
               <div className="px-4 pb-4 border-t">
                 <SoundPoolEditor
                   pool={pool}
-                  onUpdate={(updatedPool) => { editor.setDefaultPool(eventType, updatedPool); }}
-                  onAddSound={(entry) => { editor.addDefaultSound(eventType, entry); }}
+                  onUpdate={(updatedPool) => {
+                    editor.setDefaultPool(eventType, updatedPool);
+                  }}
+                  onAddSound={(entry) => {
+                    editor.addDefaultSound(eventType, entry);
+                  }}
                   onUpdateSound={(soundId, updates) => {
                     editor.updateDefaultSound(eventType, soundId, updates);
                   }}
-                  onRemoveSound={(soundId) => { editor.removeDefaultSound(eventType, soundId); }}
-                  onPreview={(source) => { void editor.previewSound(source); }}
+                  onRemoveSound={(soundId) => {
+                    editor.removeDefaultSound(eventType, soundId);
+                  }}
+                  onPreview={(source) => {
+                    void editor.previewSound(source);
+                  }}
                   onStopPreview={editor.stopPreview}
                   onSelectFile={editor.adapter.selectAudioFile}
-                  onCache={async (url) => { await editor.adapter.cacheYouTubeAudio(url); }}
+                  onCache={async (url) => {
+                    await editor.adapter.cacheYouTubeAudio(url);
+                  }}
                   getCacheStatus={editor.adapter.getCacheStatus}
                 />
               </div>
@@ -300,13 +316,11 @@ function RulesTab() {
   const editor = useSoundPackEditor();
   const [showTemplates, setShowTemplates] = useState(false);
 
-  const templatesByCategory = (["multikill", "objective", "player", "game"] as const).map(
-    (category) => ({
-      category,
-      label: TEMPLATE_CATEGORY_LABELS[category],
-      templates: RULE_TEMPLATES.filter((t) => t.category === category),
-    }),
-  );
+  const templatesByCategory = (["multikill", "objective", "player", "game"] as const).map((category) => ({
+    category,
+    label: TEMPLATE_CATEGORY_LABELS[category],
+    templates: RULE_TEMPLATES.filter((t) => t.category === category),
+  }));
 
   const addFromTemplate = (template: RuleTemplate) => {
     const rule = createRuleFromTemplate(template);
@@ -323,14 +337,18 @@ function RulesTab() {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => { setShowTemplates(!showTemplates); }}
+            onClick={() => {
+              setShowTemplates(!showTemplates);
+            }}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50"
           >
             {showTemplates ? "Hide Templates" : "Add from Template"}
           </button>
           <button
             type="button"
-            onClick={() => { editor.addRule(); }}
+            onClick={() => {
+              editor.addRule();
+            }}
             className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             + Add Rule
@@ -350,7 +368,9 @@ function RulesTab() {
                   <button
                     key={template.templateId}
                     type="button"
-                    onClick={() => { addFromTemplate(template); }}
+                    onClick={() => {
+                      addFromTemplate(template);
+                    }}
                     className="px-3 py-1.5 text-sm border rounded hover:bg-blue-50 hover:border-blue-300"
                   >
                     {template.name}
@@ -370,25 +390,37 @@ function RulesTab() {
         </div>
       ) : (
         <div className="space-y-3">
-            {editor.soundPack.rules
+          {editor.soundPack.rules
             .sort((a, b) => b.priority - a.priority)
             .map((rule) => (
               <RuleEditor
                 key={rule.id}
                 rule={rule}
-                onUpdate={(updates) => { editor.updateRule(rule.id, updates); }}
-                onRemove={() => { editor.removeRule(rule.id); }}
-                onAddSound={(entry) => { editor.addRuleSound(rule.id, entry); }}
+                onUpdate={(updates) => {
+                  editor.updateRule(rule.id, updates);
+                }}
+                onRemove={() => {
+                  editor.removeRule(rule.id);
+                }}
+                onAddSound={(entry) => {
+                  editor.addRuleSound(rule.id, entry);
+                }}
                 onUpdateSound={(soundId, updates) => {
                   editor.updateRuleSound(rule.id, soundId, updates);
                 }}
-                onRemoveSound={(soundId) => { editor.removeRuleSound(rule.id, soundId); }}
-                onPreview={(source) => { void editor.previewSound(source); }}
+                onRemoveSound={(soundId) => {
+                  editor.removeRuleSound(rule.id, soundId);
+                }}
+                onPreview={(source) => {
+                  void editor.previewSound(source);
+                }}
                 onStopPreview={editor.stopPreview}
                 onSelectFile={editor.adapter.selectAudioFile}
                 champions={editor.champions}
                 localPlayerName={editor.localPlayer?.summonerName}
-                onCache={async (url) => { await editor.adapter.cacheYouTubeAudio(url); }}
+                onCache={async (url) => {
+                  await editor.adapter.cacheYouTubeAudio(url);
+                }}
                 getCacheStatus={editor.adapter.getCacheStatus}
               />
             ))}
@@ -412,7 +444,9 @@ function SettingsTab() {
         <h3 className="font-medium mb-3">Volume</h3>
         <VolumeSlider
           value={editor.soundPack.settings.masterVolume}
-          onChange={(volume) => { editor.setMasterVolume(volume); }}
+          onChange={(volume) => {
+            editor.setMasterVolume(volume);
+          }}
           label="Master Volume"
         />
         <p className="text-xs text-gray-500 mt-2">
@@ -428,14 +462,16 @@ function SettingsTab() {
             id="normalization"
             type="checkbox"
             checked={editor.soundPack.settings.normalization}
-            onChange={(e) => { editor.setNormalization(e.currentTarget.checked); }}
+            onChange={(e) => {
+              editor.setNormalization(e.currentTarget.checked);
+            }}
             className="rounded"
           />
           <span className="text-sm">Normalize audio levels</span>
         </label>
         <p className="text-xs text-gray-500 mt-2">
-          When enabled, all sounds are analyzed and adjusted to have consistent volume levels
-          before the per-sound volume is applied.
+          When enabled, all sounds are analyzed and adjusted to have consistent volume levels before the per-sound
+          volume is applied.
         </p>
       </div>
 
@@ -444,33 +480,45 @@ function SettingsTab() {
         <h3 className="font-medium mb-3">Pack Information</h3>
         <div className="space-y-3">
           <div>
-            <label htmlFor="version" className="block text-sm text-gray-600 mb-1">Version</label>
+            <label htmlFor="version" className="block text-sm text-gray-600 mb-1">
+              Version
+            </label>
             <input
               id="version"
               type="text"
               value={editor.soundPack.version}
-              onChange={(e) => { editor.updatePack({ version: e.currentTarget.value }); }}
+              onChange={(e) => {
+                editor.updatePack({ version: e.currentTarget.value });
+              }}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="1.0.0"
             />
           </div>
           <div>
-            <label htmlFor="author" className="block text-sm text-gray-600 mb-1">Author</label>
+            <label htmlFor="author" className="block text-sm text-gray-600 mb-1">
+              Author
+            </label>
             <input
               id="author"
               type="text"
               value={editor.soundPack.author ?? ""}
-              onChange={(e) => { editor.updatePack({ author: e.currentTarget.value || undefined }); }}
+              onChange={(e) => {
+                editor.updatePack({ author: e.currentTarget.value || undefined });
+              }}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="Your name"
             />
           </div>
           <div>
-            <label htmlFor="description" className="block text-sm text-gray-600 mb-1">Description</label>
+            <label htmlFor="description" className="block text-sm text-gray-600 mb-1">
+              Description
+            </label>
             <textarea
               id="description"
               value={editor.soundPack.description ?? ""}
-              onChange={(e) => { editor.updatePack({ description: e.currentTarget.value || undefined }); }}
+              onChange={(e) => {
+                editor.updatePack({ description: e.currentTarget.value || undefined });
+              }}
               className="w-full px-3 py-2 border rounded text-sm"
               rows={3}
               placeholder="Describe your sound pack..."
@@ -484,7 +532,9 @@ function SettingsTab() {
         <h3 className="font-medium text-red-600 mb-3">Danger Zone</h3>
         <button
           type="button"
-          onClick={() => { editor.resetPack(); }}
+          onClick={() => {
+            editor.resetPack();
+          }}
           className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50"
         >
           Reset to Empty Pack

@@ -22,9 +22,7 @@ const EXCEPTIONAL_GAME_THRESHOLDS = {
   stompParticipationKda: 2,
 };
 
-export type ExceptionalGameResult =
-  | { isExceptional: false }
-  | { isExceptional: true; reason: string };
+export type ExceptionalGameResult = { isExceptional: false } | { isExceptional: true; reason: string };
 
 /**
  * Calculate KDA ratio, treating 0 deaths as perfect (returns Infinity)

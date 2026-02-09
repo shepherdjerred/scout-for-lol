@@ -86,17 +86,19 @@ export function SoundPoolEditor({
       <div className="flex items-center justify-between">
         {title && <h4 className="text-sm font-medium text-gray-700">{title}</h4>}
         <div className="flex items-center gap-2">
-          <label htmlFor="selection-mode" className="text-xs text-gray-500">Selection:</label>
+          <label htmlFor="selection-mode" className="text-xs text-gray-500">
+            Selection:
+          </label>
           <select
             id="selection-mode"
             value={pool.selectionMode}
             onChange={(e) => {
-            const value = e.currentTarget.value;
-            // Type guard for selection mode
-            if (value === "random" || value === "sequential" || value === "weighted") {
-              onUpdate({ ...pool, selectionMode: value });
-            }
-          }}
+              const value = e.currentTarget.value;
+              // Type guard for selection mode
+              if (value === "random" || value === "sequential" || value === "weighted") {
+                onUpdate({ ...pool, selectionMode: value });
+              }
+            }}
             className="text-xs px-2 py-1 border rounded bg-white"
           >
             {(["random", "sequential", "weighted"] as const).map((mode) => (
@@ -117,8 +119,12 @@ export function SoundPoolEditor({
             <SoundEntryCard
               key={entry.id}
               entry={entry}
-              onUpdate={(updates) => { onUpdateSound(entry.id, updates); }}
-              onRemove={() => { onRemoveSound(entry.id); }}
+              onUpdate={(updates) => {
+                onUpdateSound(entry.id, updates);
+              }}
+              onRemove={() => {
+                onRemoveSound(entry.id);
+              }}
               onPreview={onPreview}
               onStopPreview={onStopPreview}
               onCache={onCache}
@@ -135,13 +141,17 @@ export function SoundPoolEditor({
 
           {/* URL input */}
           <div className="space-y-2">
-            <label htmlFor="new-sound-url" className="text-xs text-gray-500">YouTube or Audio URL</label>
+            <label htmlFor="new-sound-url" className="text-xs text-gray-500">
+              YouTube or Audio URL
+            </label>
             <div className="flex gap-2">
               <input
                 id="new-sound-url"
                 type="url"
                 value={newSoundUrl}
-                onChange={(e) => { setNewSoundUrl(e.currentTarget.value); }}
+                onChange={(e) => {
+                  setNewSoundUrl(e.currentTarget.value);
+                }}
                 placeholder="https://youtube.com/watch?v=..."
                 className="flex-1 px-3 py-2 border rounded text-sm"
               />
@@ -161,7 +171,9 @@ export function SoundPoolEditor({
             <span className="text-xs text-gray-500">or</span>
             <button
               type="button"
-              onClick={() => { void handleAddFile(); }}
+              onClick={() => {
+                void handleAddFile();
+              }}
               className="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-100"
             >
               Select File...
@@ -171,7 +183,10 @@ export function SoundPoolEditor({
           {/* Cancel button */}
           <button
             type="button"
-            onClick={() => { setShowAddForm(false); setNewSoundUrl(""); }}
+            onClick={() => {
+              setShowAddForm(false);
+              setNewSoundUrl("");
+            }}
             className="text-sm text-gray-500 hover:text-gray-700"
           >
             Cancel
@@ -180,7 +195,9 @@ export function SoundPoolEditor({
       ) : (
         <button
           type="button"
-          onClick={() => { setShowAddForm(true); }}
+          onClick={() => {
+            setShowAddForm(true);
+          }}
           className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-600"
         >
           + Add Sound

@@ -122,7 +122,10 @@ function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<
   const surrenderLeaders = findSurrenderLeaders(stats.individualStats);
   if (surrenderLeaders.length > 0) {
     const surrenderList = surrenderLeaders
-      .map((p) => `**${p.alias}** (${formatSurrenderRate(p.surrenders, p.totalGames)}, ${p.surrenders.toString()} surrenders)`)
+      .map(
+        (p) =>
+          `**${p.alias}** (${formatSurrenderRate(p.surrenders, p.totalGames)}, ${p.surrenders.toString()} surrenders)`,
+      )
       .join(", ");
     lines.push(`Highest Surrender Rate: ${surrenderList}`);
     lines.push("");

@@ -160,7 +160,7 @@ export const soundPackRouter = router({
       z.object({
         id: z.number(),
         data: SoundPackInputSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
@@ -265,7 +265,7 @@ export const soundPackRouter = router({
           gameResult: z.enum(["victory", "defeat"]).optional(),
           localPlayerName: z.string().optional(),
         }),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation

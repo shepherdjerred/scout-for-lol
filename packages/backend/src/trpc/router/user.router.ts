@@ -114,7 +114,7 @@ export const userRouter = router({
       z.object({
         clientId: z.string().optional(),
         limit: z.number().int().min(1).max(100).default(50),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const events = await prisma.gameEventLog.findMany({

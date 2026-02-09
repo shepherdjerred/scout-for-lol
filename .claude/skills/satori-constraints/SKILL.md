@@ -29,7 +29,7 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 ### Key Differences from Browser CSS
 
 | Feature | Satori | Browser CSS |
-|---------|--------|-------------|
+| --------- | -------- | ------------- |
 | Default display | `flex` | `block` |
 | Default flex-direction | `row` | `row` |
 | `position: absolute` | Relative to flex parent | Relative to positioned ancestor |
@@ -41,6 +41,7 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 ## Supported CSS Properties
 
 ### Layout Properties
+
 - `display` (only `flex` and `none`)
 - `position` (`relative`, `absolute`)
 - `top`, `right`, `bottom`, `left`
@@ -54,6 +55,7 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 - `overflow` (`hidden`, `visible`)
 
 ### Visual Properties
+
 - `color`
 - `background`, `background-color`, `background-image`
 - `border`, `border-radius`
@@ -61,6 +63,7 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 - `opacity`
 
 ### Typography
+
 - `font-family`, `font-size`, `font-weight`, `font-style`
 - `line-height`
 - `letter-spacing`
@@ -72,6 +75,7 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 - `text-overflow`
 
 ### NOT Supported
+
 - `z-index` - elements render in DOM order
 - `transform` with 3D functions (`rotateX`, `translateZ`, etc.)
 - `animation`, `transition`
@@ -90,8 +94,9 @@ Satori uses **Yoga** (the same layout engine as React Native), not browser CSS:
 ## Font Requirements
 
 ### Supported Formats
+
 | Format | Supported | Notes |
-|--------|-----------|-------|
+| -------- | ----------- | ------- |
 | TTF | Yes | Recommended for server-side |
 | OTF | Yes | Recommended for server-side |
 | WOFF | Yes | Good balance of size/speed |
@@ -152,7 +157,7 @@ const svg = await satori(
 />
 ```
 
-### Best Practices
+### Image Best Practices
 
 1. **Use base64** - avoids extra network requests during rendering
 2. **Always set dimensions** - `width` and `height` are required for external URLs
@@ -233,6 +238,7 @@ const svg = await satori(element, {
 **Bug:** `linear-gradient(transparent, white)` renders as dark gray to white.
 
 **Workaround:** Use `rgba(255, 255, 255, 0)` instead of `transparent`:
+
 ```tsx
 backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0), white)'
 ```
@@ -248,6 +254,7 @@ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0), white)'
 **Issue:** Long text may overflow containers unexpectedly.
 
 **Workaround:** Always set `overflow: hidden` and use `text-overflow: ellipsis`:
+
 ```tsx
 <div style={{
   overflow: 'hidden',

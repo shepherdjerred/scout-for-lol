@@ -48,7 +48,7 @@ export const authRouter = router({
       z.object({
         redirectUri: z.url(),
         state: z.string().optional(),
-      })
+      }),
     )
     .query(({ input }) => {
       const clientId = configuration.applicationId;
@@ -80,7 +80,7 @@ export const authRouter = router({
       z.object({
         code: z.string(),
         redirectUri: z.url(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       // Exchange code for tokens
@@ -198,14 +198,12 @@ export const authRouter = router({
       z.object({
         name: z.string().min(1).max(100),
         expiresInDays: z.number().int().min(1).max(365).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const { token, hash } = generateApiToken();
 
-      const expiresAt = input.expiresInDays
-        ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000)
-        : null;
+      const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000) : null;
 
       const apiToken = await prisma.apiToken.create({
         data: {
@@ -257,34 +255,32 @@ export const authRouter = router({
   /**
    * Revoke an API token
    */
-  revokeApiToken: protectedProcedure
-    .input(z.object({ tokenId: z.number() }))
-    .mutation(async ({ input, ctx }) => {
-      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
-      const tokenId = input.tokenId as ApiTokenId;
-      const token = await prisma.apiToken.findFirst({
-        where: {
-          id: tokenId,
-          userId: ctx.user.discordId,
-        },
+  revokeApiToken: protectedProcedure.input(z.object({ tokenId: z.number() })).mutation(async ({ input, ctx }) => {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
+    const tokenId = input.tokenId as ApiTokenId;
+    const token = await prisma.apiToken.findFirst({
+      where: {
+        id: tokenId,
+        userId: ctx.user.discordId,
+      },
+    });
+
+    if (!token) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Token not found",
       });
+    }
 
-      if (!token) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Token not found",
-        });
-      }
+    await prisma.apiToken.update({
+      where: { id: tokenId },
+      data: { revokedAt: new Date() },
+    });
 
-      await prisma.apiToken.update({
-        where: { id: tokenId },
-        data: { revokedAt: new Date() },
-      });
+    logger.info(`API token revoked: ${token.name} for user ${ctx.user.discordUsername}`);
 
-      logger.info(`API token revoked: ${token.name} for user ${ctx.user.discordUsername}`);
-
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 
   /**
    * Get current user info

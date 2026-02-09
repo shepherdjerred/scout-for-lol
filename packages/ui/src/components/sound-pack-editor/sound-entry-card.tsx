@@ -108,8 +108,7 @@ export function SoundEntryCard({
   const [isCaching, setIsCaching] = useState(false);
 
   const isYouTube =
-    entry.source.type === "url" &&
-    (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be"));
+    entry.source.type === "url" && (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be"));
 
   // Check cache status on mount and when URL changes
   // eslint-disable-next-line custom-rules/no-use-effect -- Need to check cache status on mount
@@ -131,7 +130,9 @@ export function SoundEntryCard({
       setIsPlaying(true);
       onPreview(entry.source);
       // Auto-stop after a reasonable time (sounds are usually short)
-      setTimeout(() => { setIsPlaying(false); }, 10000);
+      setTimeout(() => {
+        setIsPlaying(false);
+      }, 10000);
     }
   };
 
@@ -154,9 +155,7 @@ export function SoundEntryCard({
   };
 
   const sourceDisplay =
-    entry.source.type === "file"
-      ? entry.source.path.split("/").pop() ?? entry.source.path
-      : entry.source.url;
+    entry.source.type === "file" ? (entry.source.path.split("/").pop() ?? entry.source.path) : entry.source.url;
 
   const icon = getSourceIcon(entry.source.type, isYouTube);
   const typeLabel = getSourceTypeLabel(entry.source.type, isYouTube);
@@ -192,21 +191,27 @@ export function SoundEntryCard({
           <div className="mt-2">
             <VolumeSlider
               value={entry.volume}
-              onChange={(volume) => { onUpdate({ volume }); }}
+              onChange={(volume) => {
+                onUpdate({ volume });
+              }}
               label="Volume"
             />
           </div>
 
           {/* Weight input (for weighted selection) */}
           <div className="mt-2 flex items-center gap-2">
-            <label htmlFor={`weight-${entry.id}`} className="text-xs text-gray-500">Weight:</label>
+            <label htmlFor={`weight-${entry.id}`} className="text-xs text-gray-500">
+              Weight:
+            </label>
             <input
               id={`weight-${entry.id}`}
               type="number"
               min="0"
               step="0.1"
               value={entry.weight ?? 1}
-              onChange={(e) => { onUpdate({ weight: Number(e.currentTarget.value) }); }}
+              onChange={(e) => {
+                onUpdate({ weight: Number(e.currentTarget.value) });
+              }}
               className="w-16 px-2 py-1 text-xs border rounded"
             />
           </div>
@@ -216,7 +221,9 @@ export function SoundEntryCard({
         <div className="flex flex-col gap-1">
           <button
             type="button"
-            onClick={() => { handlePreview(); }}
+            onClick={() => {
+              handlePreview();
+            }}
             className={`p-2 rounded hover:bg-gray-100 ${isPlaying ? "text-blue-600" : "text-gray-500"}`}
             title={isPlaying ? "Stop preview" : "Preview sound"}
           >
@@ -226,12 +233,16 @@ export function SoundEntryCard({
             <CacheButton
               cacheStatus={cacheStatus}
               isCaching={isCaching}
-              onCache={() => { void handleCache(); }}
+              onCache={() => {
+                void handleCache();
+              }}
             />
           )}
           <button
             type="button"
-            onClick={() => { onUpdate({ enabled: !entry.enabled }); }}
+            onClick={() => {
+              onUpdate({ enabled: !entry.enabled });
+            }}
             className={`p-2 rounded hover:bg-gray-100 ${entry.enabled ? "text-green-600" : "text-gray-400"}`}
             title={entry.enabled ? "Disable" : "Enable"}
           >

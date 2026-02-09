@@ -6,12 +6,7 @@
  */
 
 import { useState } from "react";
-import type {
-  RuleCondition,
-  MultikillType,
-  ObjectiveType,
-  DragonType,
-} from "@scout-for-lol/data";
+import type { RuleCondition, MultikillType, ObjectiveType, DragonType } from "@scout-for-lol/data";
 import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
 
 type ConditionBuilderProps = {
@@ -63,12 +58,7 @@ const CONDITION_TYPES: { value: ConditionType; label: string }[] = [
   { value: "gameResult", label: "Game Result" },
 ];
 
-export function ConditionBuilder({
-  conditions,
-  onChange,
-  champions,
-  localPlayerName,
-}: ConditionBuilderProps) {
+export function ConditionBuilder({ conditions, onChange, champions, localPlayerName }: ConditionBuilderProps) {
   const [newConditionType, setNewConditionType] = useState<ConditionType>("player");
 
   const addCondition = () => {
@@ -121,8 +111,12 @@ export function ConditionBuilder({
         <ConditionCard
           key={index}
           condition={condition}
-          onChange={(updated) => { updateCondition(index, updated); }}
-          onRemove={() => { removeCondition(index); }}
+          onChange={(updated) => {
+            updateCondition(index, updated);
+          }}
+          onRemove={() => {
+            removeCondition(index);
+          }}
           champions={champions}
           localPlayerName={localPlayerName}
         />
@@ -135,9 +129,16 @@ export function ConditionBuilder({
           onChange={(e) => {
             const value = e.currentTarget.value;
             // Validate the value before setting
-            if (value === "player" || value === "champion" || value === "multikill" ||
-                value === "objective" || value === "dragonType" || value === "stolen" ||
-                value === "team" || value === "gameResult") {
+            if (
+              value === "player" ||
+              value === "champion" ||
+              value === "multikill" ||
+              value === "objective" ||
+              value === "dragonType" ||
+              value === "stolen" ||
+              value === "team" ||
+              value === "gameResult"
+            ) {
               setNewConditionType(value);
             }
           }}
@@ -173,51 +174,25 @@ type ConditionCardProps = {
   localPlayerName?: string | undefined;
 };
 
-function ConditionCard({
-  condition,
-  onChange,
-  onRemove,
-  champions,
-  localPlayerName,
-}: ConditionCardProps) {
+function ConditionCard({ condition, onChange, onRemove, champions, localPlayerName }: ConditionCardProps) {
   const renderConditionContent = () => {
     switch (condition.type) {
       case "player":
-        return (
-          <PlayerConditionEditor
-            condition={condition}
-            onChange={onChange}
-            localPlayerName={localPlayerName}
-          />
-        );
+        return <PlayerConditionEditor condition={condition} onChange={onChange} localPlayerName={localPlayerName} />;
       case "champion":
-        return (
-          <ChampionConditionEditor
-            condition={condition}
-            onChange={onChange}
-            champions={champions}
-          />
-        );
+        return <ChampionConditionEditor condition={condition} onChange={onChange} champions={champions} />;
       case "multikill":
-        return (
-          <MultikillConditionEditor condition={condition} onChange={onChange} />
-        );
+        return <MultikillConditionEditor condition={condition} onChange={onChange} />;
       case "objective":
-        return (
-          <ObjectiveConditionEditor condition={condition} onChange={onChange} />
-        );
+        return <ObjectiveConditionEditor condition={condition} onChange={onChange} />;
       case "dragonType":
-        return (
-          <DragonTypeConditionEditor condition={condition} onChange={onChange} />
-        );
+        return <DragonTypeConditionEditor condition={condition} onChange={onChange} />;
       case "stolen":
         return <StolenConditionEditor condition={condition} onChange={onChange} />;
       case "team":
         return <TeamConditionEditor condition={condition} onChange={onChange} />;
       case "gameResult":
-        return (
-          <GameResultConditionEditor condition={condition} onChange={onChange} />
-        );
+        return <GameResultConditionEditor condition={condition} onChange={onChange} />;
     }
   };
 
@@ -302,10 +277,7 @@ function PlayerConditionEditor({
       {/* Player list */}
       <div className="flex flex-wrap gap-1">
         {condition.players.map((player) => (
-          <span
-            key={player}
-            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 rounded text-sm"
-          >
+          <span key={player} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 rounded text-sm">
             {player}
             <button
               type="button"
@@ -328,16 +300,18 @@ function PlayerConditionEditor({
         <input
           type="text"
           value={newPlayer}
-          onChange={(e) => { setNewPlayer(e.currentTarget.value); }}
-          onKeyDown={(e) => { if (e.key === "Enter") { addPlayer(); } }}
+          onChange={(e) => {
+            setNewPlayer(e.currentTarget.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              addPlayer();
+            }
+          }}
           placeholder="Summoner name"
           className="flex-1 px-2 py-1 border rounded text-sm"
         />
-        <button
-          type="button"
-          onClick={addPlayer}
-          className="px-2 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
-        >
+        <button type="button" onClick={addPlayer} className="px-2 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200">
           Add
         </button>
       </div>
@@ -359,11 +333,7 @@ function ChampionConditionEditor({
 
   const filteredChampions = query
     ? champions
-        .filter(
-          (c) =>
-            c.name.toLowerCase().includes(query.toLowerCase()) &&
-            !condition.champions.includes(c.id),
-        )
+        .filter((c) => c.name.toLowerCase().includes(query.toLowerCase()) && !condition.champions.includes(c.id))
         .slice(0, 8)
     : [];
 
@@ -403,10 +373,7 @@ function ChampionConditionEditor({
         {condition.champions.map((champId) => {
           const champ = champions.find((c) => c.id === champId);
           return (
-            <span
-              key={champId}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 rounded text-sm"
-            >
+            <span key={champId} className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 rounded text-sm">
               {champ?.name ?? champId}
               <button
                 type="button"
@@ -434,8 +401,14 @@ function ChampionConditionEditor({
             setQuery(e.currentTarget.value);
             setShowSuggestions(true);
           }}
-          onFocus={() => { setShowSuggestions(true); }}
-          onBlur={() => { setTimeout(() => { setShowSuggestions(false); }, 200); }}
+          onFocus={() => {
+            setShowSuggestions(true);
+          }}
+          onBlur={() => {
+            setTimeout(() => {
+              setShowSuggestions(false);
+            }, 200);
+          }}
           placeholder="Search champions..."
           className="w-full px-2 py-1 border rounded text-sm"
         />
@@ -445,7 +418,9 @@ function ChampionConditionEditor({
               <button
                 key={champ.id}
                 type="button"
-                onClick={() => { addChampion(champ.id); }}
+                onClick={() => {
+                  addChampion(champ.id);
+                }}
                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
               >
                 {champ.name}
@@ -482,7 +457,9 @@ function MultikillConditionEditor({
               id={`multikill-${mt.value}`}
               type="checkbox"
               checked={condition.killTypes.includes(mt.value)}
-              onChange={() => { toggleType(mt.value); }}
+              onChange={() => {
+                toggleType(mt.value);
+              }}
               className="rounded"
             />
             {mt.label}
@@ -517,7 +494,9 @@ function ObjectiveConditionEditor({
               id={`objective-${ot.value}`}
               type="checkbox"
               checked={condition.objectives.includes(ot.value)}
-              onChange={() => { toggleType(ot.value); }}
+              onChange={() => {
+                toggleType(ot.value);
+              }}
               className="rounded"
             />
             {ot.label}
@@ -552,7 +531,9 @@ function DragonTypeConditionEditor({
               id={`dragon-${dt.value}`}
               type="checkbox"
               checked={condition.dragons.includes(dt.value)}
-              onChange={() => { toggleType(dt.value); }}
+              onChange={() => {
+                toggleType(dt.value);
+              }}
               className="rounded"
             />
             {dt.label}
