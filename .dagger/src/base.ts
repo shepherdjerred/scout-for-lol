@@ -2,12 +2,14 @@ import type { Container, Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 import { getGitHubContainer } from "@shepherdjerred/dagger-utils/containers";
 
+const BUN_VERSION = "1.3.9";
+
 /**
  * Get a base Bun container
  * @returns A Bun container with basic setup
  */
 export function getBunContainer(): Container {
-  return dag.container().from("oven/bun:latest").withWorkdir("/workspace");
+  return dag.container().from(`oven/bun:${BUN_VERSION}`).withWorkdir("/workspace");
 }
 
 /**
@@ -231,7 +233,7 @@ export function getBunNodeContainer(workspaceSource?: Directory): Container {
   // Cache the apt packages to speed up Node.js installation
   let container = dag
     .container()
-    .from("oven/bun:latest")
+    .from(`oven/bun:${BUN_VERSION}`)
     .withWorkdir("/workspace")
     .withMountedCache("/var/cache/apt", dag.cacheVolume("apt-cache"))
     .withMountedCache("/var/lib/apt/lists", dag.cacheVolume("apt-lists"))
