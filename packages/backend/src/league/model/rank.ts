@@ -4,7 +4,7 @@ import { api } from "@scout-for-lol/backend/league/api/api";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
 import { z } from "zod";
-import * as Sentry from "@sentry/bun";
+import { riotApiErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
@@ -60,9 +60,7 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
     };
   } catch (error) {
     logger.error(`Failed to fetch ranks for ${player.alias}:`, error);
-    Sentry.captureException(error, {
-      tags: { source: "rank-fetch", playerAlias: player.alias },
-    });
+    riotApiErrorsTotal.inc({ source: "rank-fetch", http_status: "unknown" });
     throw error;
   }
 }

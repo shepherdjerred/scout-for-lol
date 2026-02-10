@@ -4,7 +4,7 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index";
 import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { z } from "zod";
-import * as Sentry from "@sentry/bun";
+import { riotApiErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
@@ -35,9 +35,7 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
 
     if (!matchIdsResult.success) {
       logger.error(`❌ Failed to parse match IDs for ${playerAlias}:`, matchIdsResult.error);
-      Sentry.captureException(matchIdsResult.error, {
-        tags: { source: "match-id-parsing", playerAlias },
-      });
+      riotApiErrorsTotal.inc({ source: "match-id-parsing", http_status: "validation" });
       return undefined;
     }
 
@@ -56,17 +54,10 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
         return undefined;
       }
       logger.error(`❌ HTTP Error ${status.toString()} for ${playerAlias}`);
-      // Skip Sentry for 5xx errors - transient upstream issues we can't fix
-      if (status < 500 || status >= 600) {
-        Sentry.captureException(e, {
-          tags: { source: "match-history-api", playerAlias, httpStatus: status.toString() },
-        });
-      }
+      riotApiErrorsTotal.inc({ source: "match-history-api", http_status: status.toString() });
     } else {
       logger.error(`❌ Error fetching match history for ${playerAlias}:`, e);
-      Sentry.captureException(e, {
-        tags: { source: "match-history-api", playerAlias },
-      });
+      riotApiErrorsTotal.inc({ source: "match-history-api", http_status: "unknown" });
     }
     return undefined;
   }

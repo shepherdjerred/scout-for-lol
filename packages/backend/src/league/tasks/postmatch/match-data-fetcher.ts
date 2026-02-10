@@ -1,18 +1,18 @@
 import { z, ZodError } from "zod";
-import * as Sentry from "@sentry/bun";
 import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { Region, MatchId, RawMatch, RawTimeline } from "@scout-for-lol/data/index.ts";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { riotApiErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
 import { saveFailedPayloadToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
 import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
 const logger = createLogger("match-data-fetcher");
 
-function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
-  Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
+function trackApiError(source: string, httpStatus: string): void {
+  riotApiErrorsTotal.inc({ source, http_status: httpStatus });
 }
 
 /**
@@ -35,7 +35,7 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     } catch (parseError) {
       logger.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
       logger.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
-      captureError(parseError, "match-data-validation", matchId);
+      trackApiError("match-data-validation", "validation");
 
       // Save failed payload to S3 for debugging
       if (parseError instanceof ZodError) {
@@ -58,13 +58,10 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
         return undefined;
       }
       logger.error(`[fetchMatchData] ❌ HTTP Error ${status.toString()} for match ${matchId}`);
-      // Skip Sentry for 5xx errors - transient upstream issues we can't fix
-      if (status < 500 || status >= 600) {
-        captureError(e, "match-data-fetch", matchId, { httpStatus: status.toString() });
-      }
+      trackApiError("match-data-fetch", status.toString());
     } else {
       logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
-      captureError(e, "match-data-fetch", matchId);
+      trackApiError("match-data-fetch", "unknown");
     }
     return undefined;
   }
@@ -98,7 +95,7 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
     } catch (parseError) {
       logger.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
       logger.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
-      captureError(parseError, "timeline-data-validation", matchId);
+      trackApiError("timeline-data-validation", "validation");
 
       // Save failed payload to S3 for debugging
       if (parseError instanceof ZodError) {
@@ -121,13 +118,10 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
         return undefined;
       }
       logger.error(`[fetchMatchTimeline] ❌ HTTP Error ${status.toString()} for timeline ${matchId}`);
-      // Skip Sentry for 5xx errors - transient upstream issues we can't fix
-      if (status < 500 || status >= 600) {
-        captureError(e, "timeline-data-fetch", matchId, { httpStatus: status.toString() });
-      }
+      trackApiError("timeline-data-fetch", status.toString());
     } else {
       logger.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
-      captureError(e, "timeline-data-fetch", matchId);
+      trackApiError("timeline-data-fetch", "unknown");
     }
     return undefined;
   }

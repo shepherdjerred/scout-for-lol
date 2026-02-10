@@ -353,6 +353,16 @@ export const unhandledErrorsTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Total number of Riot API errors by source and HTTP status
+ */
+export const riotApiErrorsTotal = new Counter({
+  name: "riot_api_errors_total",
+  help: "Total number of Riot API errors by source and HTTP status",
+  labelNames: ["source", "http_status"] as const,
+  registers: [registry],
+});
+
 // Track application start time for uptime calculation
 const applicationStartTime = Date.now();
 
