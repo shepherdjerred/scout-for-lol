@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- Hook provides comprehensive state management that benefits from co-location */
 /**
  * Sound Pack Editor Hook and Context
  *
